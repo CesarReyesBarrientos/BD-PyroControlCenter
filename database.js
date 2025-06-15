@@ -5,16 +5,16 @@ require('dotenv').config();
 // Configuración de la base de datos
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3307,
+  port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'pyrocontrolcenter',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000,
-  reconnect: true
+  // acquireTimeout: 60000,
+  // timeout: 60000,
+  // reconnect: true
 };
 
 // Crear pool de conexiones
@@ -31,15 +31,17 @@ async function testConnection() {
     console.log(`👤 Usuario: ${dbConfig.user}`);
     
     // Ejecutar una consulta simple para verificar la conexión
-    const [rows] = await connection.execute('SELECT 1 + 1 AS result, NOW() as current_time');
-    
+   // const [rows] = await connection.execute('SELECT 1 + 1 AS result, NOW() as current_time');
+   const [rows] = await connection.execute('SELECT 1 + 1 AS result');
+ 
+
     console.log('✅ ¡Conexión exitosa a la base de datos MySQL!');
     console.log(`🎯 Resultado de prueba: ${rows[0].result}`);
-    console.log(`⏰ Hora actual: ${rows[0].current_time}`);
+  //  console.log(`⏰ Hora actual: ${rows[0].current_time}`);
     console.log('📊 Estado de la conexión: ACTIVA');
     
     // Obtener información adicional
-    const [versionResult] = await connection.execute('SELECT VERSION() AS version');
+   const [versionResult] = await connection.execute('SELECT VERSION() AS version');
     const [tablesResult] = await connection.execute('SHOW TABLES');
     
     console.log('📋 Información de la base de datos:');
