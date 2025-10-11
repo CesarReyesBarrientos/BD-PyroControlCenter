@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3307
--- Tiempo de generación: 11-10-2025 a las 03:01:41
+-- Tiempo de generación: 11-10-2025 a las 04:52:15
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.0.28
 
@@ -32,7 +32,8 @@ CREATE TABLE `customers` (
   `CustomerName` varchar(255) DEFAULT NULL,
   `PhoneNumber` varchar(20) DEFAULT NULL,
   `Email` varchar(100) DEFAULT NULL,
-  `Address` varchar(255) DEFAULT NULL
+  `Address` varchar(255) DEFAULT NULL,
+  `estado` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -45,8 +46,16 @@ CREATE TABLE `inventario` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `producto` varchar(100) NOT NULL,
   `stock` int(11) DEFAULT 0,
-  `unidad_de_medida` varchar(10) NOT NULL
+  `unidad_de_medida` varchar(10) NOT NULL,
+  `estado` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `inventario`
+--
+
+INSERT INTO `inventario` (`id`, `producto`, `stock`, `unidad_de_medida`, `estado`) VALUES
+(32, 'Paloma de 1 pulgada', 1500, 'pza', 0);
 
 -- --------------------------------------------------------
 
@@ -78,7 +87,8 @@ CREATE TABLE `lote` (
 CREATE TABLE `orders` (
   `OrderID` int(11) NOT NULL,
   `CustomerID` int(11) DEFAULT NULL,
-  `Invoice` varchar(5) DEFAULT NULL
+  `Invoice` varchar(5) DEFAULT NULL,
+  `estado` enum('Nuevo','En proceso','Pagada','Enviando','Entregada','Finalizada') DEFAULT 'Nuevo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -119,13 +129,13 @@ ALTER TABLE `orders`
 -- AUTO_INCREMENT de la tabla `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `CustomerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `CustomerID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `inventario`
 --
 ALTER TABLE `inventario`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de la tabla `lote`
@@ -137,7 +147,7 @@ ALTER TABLE `lote`
 -- AUTO_INCREMENT de la tabla `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `OrderID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `OrderID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restricciones para tablas volcadas
