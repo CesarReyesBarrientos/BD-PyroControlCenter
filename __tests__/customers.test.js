@@ -8,12 +8,7 @@ describe('Customers API', () => {
 
   // Se ejecuta ANTES DE CADA prueba 'it' en este archivo.
   beforeEach(async () => {
-    // Silenciamos console.error para mantener la salida de la prueba limpia,
-    // ya que nuestro manejador de errores centralizado lo usa.
     jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    // Limpiamos las tablas relacionadas para asegurar un estado limpio y aislado.
-    // El orden es importante por las claves foráneas (borrar 'orders' antes que 'customers').
     await pool.execute('SET FOREIGN_KEY_CHECKS = 0;');
     await pool.execute('TRUNCATE TABLE orders');
     await pool.execute('TRUNCATE TABLE customers');
@@ -22,9 +17,7 @@ describe('Customers API', () => {
 
   // Se ejecuta DESPUÉS DE TODAS las pruebas en este archivo.
   afterAll(async () => {
-    // Restauramos console.error a su comportamiento original.
     console.error.mockRestore();
-    // Cerramos el pool de conexiones a la base de datos.
     await pool.end();
   });
 

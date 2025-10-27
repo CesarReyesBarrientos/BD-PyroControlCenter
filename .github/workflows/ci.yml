@@ -39,7 +39,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # --- NUEVO PASO AÑADIDO ---
       - name: Create Database Schema
         run: |
           # Esperamos un poco para asegurarnos de que el servicio de base de datos esté listo
