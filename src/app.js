@@ -6,7 +6,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const apiRoutes = require('./routes');
-const errorHandler = require('./middlewares/errorHandler'); // <-- Asegúrate de que esta línea esté bien
+const errorHandler = require('./middlewares/errorHandler');
 const notFoundHandler = require('./middlewares/notFoundHandler');
 
 const app = express();
@@ -20,9 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use('/', apiRoutes);
 
-// El manejador 404 va después de las rutas
 app.use(notFoundHandler);
-// EL MANEJADOR DE ERRORES DEBE SER EL ÚLTIMO
-app.use(errorHandler); // <-- Asegúrate de que esta línea sea la última
+app.use(errorHandler)
 
 module.exports = app;
