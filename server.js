@@ -1,4 +1,6 @@
 // server.js
+require('dotenv').config(); 
+
 const app = require('./src/app');
 const { testConnection, getDatabaseInfo, pool } = require('./src/config/database');
 

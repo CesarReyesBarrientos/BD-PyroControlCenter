@@ -9,6 +9,7 @@ const { testDbConnection } = require('../controllers/dbController');
 const customerRoutes = require('./customerRoutes');
 const inventoryRoutes = require('./inventoryRoutes');
 const orderRoutes = require('./orderRoutes');
+const supplierRoutes = require('./supplierRoutes');
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.get('/api/db-test', testDbConnection);
 router.use('/api/customers', customerRoutes);
 router.use('/api/inventory', inventoryRoutes);
 router.use('/api/orders', orderRoutes);
+router.use('/api/proveedores', supplierRoutes);
 
 // Dejamos la ruta individual para lotes aquí por si acaso
 const orderController = require('../controllers/orderController');

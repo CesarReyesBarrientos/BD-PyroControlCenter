@@ -1,80 +1,161 @@
-// src/controllers/inventoryController.js
 const { pool } = require('../config/database');
 
-// GET /api/inventory - Ver todo el inventario activo
-exports.getAllInventory = async (req, res, next) => {
-  try {
-    const [rows] = await pool.execute('SELECT * FROM inventario WHERE estado = 1');
-    res.status(200).json(rows);
-  } catch (error) {
-    next(error);
-  }
-};
+const getAllProducts = async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT 
+                i.*,
+                COALESCE(s.nombre, 'N/A') as proveedor_nombre
+            FROM inventario i
+            LEFT JOIN suppliers s ON i.proveedor_id = s.id
+            ORDER BY i.id
+        `);
 
-// GET /api/inventory/:id - Ver un producto por ID
-exports.getProductById = async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const [rows] = await pool.execute('SELECT * FROM inventario WHERE id = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Producto no encontrado.' });
+        // Transformar los nombres de campos para el frontend
+        const products = rows.map(row => ({
+            id: row.id,
+            nombre: row.producto,
+            categoria: row.categoria,
+            stock_actual: row.stock,
+            stock_minimo: row.minstock,
+            unidad_de_medida: row.unidad_de_medida,
+            precio: row.precio,
+            proveedor_id: row.proveedor_id,
+            proveedor_nombre: row.proveedor_nombre,
+            notas: row.notas,
+            estado: row.estado
+        }));
+
+        res.json(products);
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
     }
-    res.status(200).json(rows[0]);
-  } catch (error) {
-    next(error);
-  }
 };
 
-// POST /api/inventory - Agregar un nuevo producto
-exports.createProduct = async (req, res, next) => {
-  const { producto, stock, unidad_de_medida } = req.body;
-  if (!producto || !unidad_de_medida) {
-    const error = new Error('"producto" y "unidad_de_medida" son campos requeridos.');
-    error.statusCode = 400;
-    return next(error);
-  }
-  try {
-    const sql = 'INSERT INTO inventario (producto, stock, unidad_de_medida) VALUES (?, ?, ?)';
-    const [result] = await pool.execute(sql, [producto, stock || 0, unidad_de_medida]);
-    res.status(201).json({ message: 'Producto agregado al inventario.', productId: result.insertId });
-  } catch (error) {
-    next(error);
-  }
-};
+const getProductById = async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT 
+                i.*,
+                COALESCE(s.nombre, 'N/A') as proveedor_nombre
+            FROM inventario i
+            LEFT JOIN suppliers s ON i.proveedor_id = s.id
+            WHERE i.id = ?
+        `, [req.params.id]);
 
-// PUT /api/inventory/:id/deactivate - "Dar de baja" un producto
-exports.deactivateProduct = async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const [result] = await pool.execute('UPDATE inventario SET estado = 0 WHERE id = ?', [id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Producto no encontrado.' });
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
+
+        const product = {
+            id: rows[0].id,
+            nombre: rows[0].producto,
+            categoria: rows[0].categoria,
+            stock_actual: rows[0].stock,
+            stock_minimo: rows[0].minstock,
+            unidad_de_medida: rows[0].unidad_de_medida,
+            precio: rows[0].precio,
+            proveedor_id: rows[0].proveedor_id,
+            proveedor_nombre: rows[0].proveedor_nombre,
+            notas: rows[0].notas,
+            estado: rows[0].estado
+        };
+
+        res.json(product);
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
     }
-    res.status(200).json({ message: 'Producto desactivado correctamente.' });
-  } catch (error) {
-    next(error);
-  }
 };
 
-// PUT /api/inventory/:id/stock - Actualizar (sumar) stock de un producto
-exports.addStock = async (req, res, next) => {
-  const { id } = req.params;
-  const { quantity } = req.body;
+const createProduct = async (req, res) => {
+    try {
+        console.log('Datos recibidos en createProduct:', req.body);
+        
+        const {
+            nombre,            // Se usará como 'producto' en la BD
+            categoria,
+            stock_actual,      // Se usará como 'stock' en la BD
+            stock_minimo,      // Se usará como 'minstock' en la BD
+            unidad_de_medida,
+            precio,
+            proveedor_id = null,
+            notas = null
+        } = req.body;
 
-  if (!quantity || typeof quantity !== 'number' || quantity <= 0) {
-    const error = new Error('Se requiere una "quantity" numérica y positiva en el body.');
-    error.statusCode = 400;
-    return next(error);
-  }
-  try {
-    const sql = 'UPDATE inventario SET stock = stock + ? WHERE id = ?';
-    const [result] = await pool.execute(sql, [quantity, id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Producto no encontrado.' });
+        const [result] = await pool.query(
+            'INSERT INTO inventario (producto, stock, minstock, precio, unidad_de_medida, categoria, estado, proveedor_id, notas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [nombre, stock_actual, stock_minimo, precio, unidad_de_medida, categoria, 1, proveedor_id, notas]
+        );
+
+        res.status(201).json({
+            id: result.insertId,
+            nombre,
+            categoria,
+            stock_actual,
+            stock_minimo,
+            unidad_de_medida,
+            precio,
+            proveedor_id,
+            notas,
+            estado: 1
+        });
+    } catch (error) {
+        console.error('Error creating product:', error);
+        res.status(500).json({ message: 'Error interno del servidor', error: error.message });
     }
-    const [[updatedProduct]] = await pool.execute('SELECT id, producto, stock FROM inventario WHERE id = ?', [id]);
-    res.status(200).json({ message: 'Stock actualizado.', product: updatedProduct });
-  } catch (error) {
-    next(error);
-  }
+};
+
+const updateProduct = async (req, res) => {
+    try {
+        const {
+            nombre,
+            categoria,
+            stock_actual,
+            stock_minimo,
+            unidad_de_medida,
+            precio,
+            proveedor_id,
+            notas,
+            estado = 1
+        } = req.body;
+
+        const [result] = await pool.query(
+            'UPDATE inventario SET producto = ?, stock = ?, minstock = ?, precio = ?, unidad_de_medida = ?, categoria = ?, estado = ?, proveedor_id = ?, notas = ? WHERE id = ?',
+            [nombre, stock_actual, stock_minimo, precio, unidad_de_medida, categoria, estado, proveedor_id, notas, req.params.id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
+
+        res.json({ message: 'Producto actualizado correctamente' });
+    } catch (error) {
+        console.error('Error updating product:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+};
+
+const deleteProduct = async (req, res) => {
+    try {
+        const [result] = await pool.query('DELETE FROM inventario WHERE id = ?', [req.params.id]);
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
+
+        res.json({ message: 'Producto eliminado correctamente' });
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+};
+
+module.exports = {
+    getAllProducts,
+    getProductById,
+    createProduct,
+    updateProduct,
+    deleteProduct
 };
