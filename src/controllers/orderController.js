@@ -1,6 +1,27 @@
 // src/controllers/orderController.js
 const { pool } = require('../config/database');
 
+// GET /api/orders - Obtener todas las órdenes con datos de clientes
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const sql = `
+      SELECT 
+        o.OrderID,
+        o.Invoice,
+        o.OrderDate,
+        o.estado,
+        c.CustomerName
+      FROM orders o
+      JOIN customers c ON o.CustomerID = c.CustomerID
+      ORDER BY o.OrderDate DESC
+    `;
+    const [orders] = await pool.execute(sql);
+    res.status(200).json(orders);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/orders - Crear una nueva orden
 exports.createOrder = async (req, res, next) => {
   const { CustomerID, Invoice } = req.body;

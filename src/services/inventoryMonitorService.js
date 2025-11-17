@@ -9,7 +9,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 class InventoryMonitorService {
     constructor() {
         // Programar la tarea. La expresión CRON se toma de CHECK_INTERVAL en .env
-        // Ejemplo por defecto: '0 * * * *' -> cada hora en minuto 0
+        //
         const interval = process.env.CHECK_INTERVAL || '0 * * * *';
         console.log(`InventoryMonitorService: usando CHECK_INTERVAL='${interval}'`);
         this.job = cron.schedule(interval, () => {
