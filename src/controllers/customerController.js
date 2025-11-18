@@ -6,7 +6,7 @@ exports.createCustomer = async (req, res, next) => {
     console.log('\n--- [DEBUG] Iniciando createCustomer ---');
     console.log('[DEBUG] Contenido de req.body:', req.body);
 
-  const { CustomerName, PhoneNumber, Email, Address } = req.body;
+  const { CustomerName, PhoneNumber, Email, Address, CountryCode, City, State, PostalCode, estado } = req.body;
 
     console.log(`[DEBUG] Valor de CustomerName: ${CustomerName}`);
     console.log(`[DEBUG] Valor de Email: ${Email}`);
@@ -19,8 +19,9 @@ exports.createCustomer = async (req, res, next) => {
   }
 
   try {
-    const sql = 'INSERT INTO customers (CustomerName, PhoneNumber, Email, Address) VALUES (?, ?, ?, ?)';
-    const [result] = await pool.execute(sql, [CustomerName, PhoneNumber, Email, Address]);
+    const sql = 'INSERT INTO customers (CustomerName, PhoneNumber, Email, Address, CountryCode, City, State, PostalCode, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const estadoValue = estado !== undefined ? estado : 1; // Por defecto activo
+    const [result] = await pool.execute(sql, [CustomerName, PhoneNumber, Email, Address, CountryCode, City, State, PostalCode, estadoValue]);
     res.status(201).json({ message: 'Cliente creado exitosamente.', customerId: result.insertId });
   } catch (error) {
     next(error);
