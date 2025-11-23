@@ -8,6 +8,7 @@ const getAllProducts = async (req, res) => {
                 COALESCE(s.nombre, 'N/A') as proveedor_nombre
             FROM inventario i
             LEFT JOIN suppliers s ON i.proveedor_id = s.id
+            WHERE i.estado = 1
             ORDER BY i.id
         `);
 
@@ -152,10 +153,71 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+const searchProducts = async (req, res) => {
+    try {
+        const searchTerm = req.query.q || '';
+        
+        if (!searchTerm.trim()) {
+            return res.status(400).json({ message: 'Término de búsqueda requerido' });
+        }
+
+        const searchPattern = `%${searchTerm}%`;
+        
+        // Query con búsqueda insensible a acentos usando COLLATE
+        const [rows] = await pool.query(`
+            SELECT 
+                i.*,
+                COALESCE(s.nombre, 'N/A') as proveedor_nombre
+            FROM inventario i
+            LEFT JOIN suppliers s ON i.proveedor_id = s.id
+            WHERE i.estado = 1
+            AND (
+                i.producto COLLATE utf8mb4_general_ci LIKE ? 
+                OR CONCAT('PROD-', LPAD(i.id, 3, '0')) LIKE ?
+                OR i.categoria COLLATE utf8mb4_general_ci LIKE ?
+                OR s.nombre COLLATE utf8mb4_general_ci LIKE ?
+                OR COALESCE(i.notas, '') COLLATE utf8mb4_general_ci LIKE ?
+            )
+            ORDER BY i.producto ASC
+        `, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]);
+
+        // Transformar los nombres de campos para el frontend
+        const products = rows.map(row => ({
+            id: row.id,
+            nombre: row.producto,
+            categoria: row.categoria,
+            stock_actual: row.stock,
+            stock_minimo: row.minstock,
+            unidad_de_medida: row.unidad_de_medida,
+            precio: row.precio,
+            proveedor_id: row.proveedor_id,
+            proveedor_nombre: row.proveedor_nombre,
+            notas: row.notas,
+            estado: row.estado
+        }));
+
+        console.log(`🔍 Búsqueda: "${searchTerm}" - ${products.length} resultados encontrados`);
+
+        res.json({
+            success: true,
+            count: products.length,
+            data: products
+        });
+    } catch (error) {
+        console.error('Error searching products:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message 
+        });
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    searchProducts
 };
