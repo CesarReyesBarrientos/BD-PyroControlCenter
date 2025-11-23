@@ -213,11 +213,47 @@ const searchProducts = async (req, res) => {
     }
 };
 
+const getCategories = async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT DISTINCT categoria 
+            FROM inventario 
+            WHERE estado = 1 AND categoria IS NOT NULL
+            ORDER BY categoria ASC
+        `);
+        
+        const categories = rows.map(row => row.categoria);
+        res.json(categories);
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+};
+
+const getUnits = async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT DISTINCT unidad_de_medida 
+            FROM inventario 
+            WHERE estado = 1 AND unidad_de_medida IS NOT NULL
+            ORDER BY unidad_de_medida ASC
+        `);
+        
+        const units = rows.map(row => row.unidad_de_medida);
+        res.json(units);
+    } catch (error) {
+        console.error('Error fetching units:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
     deleteProduct,
-    searchProducts
+    searchProducts,
+    getCategories,
+    getUnits
 };
