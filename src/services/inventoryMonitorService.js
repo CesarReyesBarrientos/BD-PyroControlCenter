@@ -3,13 +3,24 @@ const { pool } = require('../config/database');
 const sgMail = require('@sendgrid/mail');
 require('dotenv').config();
 
-// Configurar SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Configurar SendGrid solo si la API key está disponible
+const apiKey = process.env.SENDGRID_API_KEY;
+if (apiKey && apiKey.startsWith('SG.')) {
+    sgMail.setApiKey(apiKey);
+    console.log('✅ SendGrid configurado correctamente');
+} else {
+    console.warn('⚠️  SENDGRID_API_KEY no configurada. Las alertas por email estarán deshabilitadas.');
+}
 
 class InventoryMonitorService {
     constructor() {
+        // Solo iniciar el cron si SendGrid está configurado
+        if (!apiKey || !apiKey.startsWith('SG.')) {
+            console.log('ℹ️  Servicio de monitoreo de inventario deshabilitado (falta configuración de email)');
+            return;
+        }
+
         // Programar la tarea. La expresión CRON se toma de CHECK_INTERVAL en .env
-        //
         const interval = process.env.CHECK_INTERVAL || '0 * * * *';
         console.log(`InventoryMonitorService: usando CHECK_INTERVAL='${interval}'`);
         this.job = cron.schedule(interval, () => {
@@ -19,6 +30,12 @@ class InventoryMonitorService {
 
     async checkInventoryLevels() {
         try {
+            // Verificar si SendGrid está configurado
+            if (!apiKey || !apiKey.startsWith('SG.')) {
+                console.log('⚠️  No se puede enviar alertas: SendGrid no está configurado');
+                return;
+            }
+
             const [products] = await pool.query(`
                 SELECT 
                     i.*,
