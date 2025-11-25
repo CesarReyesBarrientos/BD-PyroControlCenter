@@ -7,8 +7,10 @@ exports.getAllOrders = async (req, res, next) => {
     const sql = `
       SELECT 
         o.OrderID,
+        o.Product,
         o.Invoice,
         o.OrderDate,
+        o.PaymentMethod,
         o.estado,
         c.CustomerName
       FROM orders o
@@ -24,7 +26,9 @@ exports.getAllOrders = async (req, res, next) => {
 
 // POST /api/orders - Crear una nueva orden
 exports.createOrder = async (req, res, next) => {
-  const { CustomerID, Invoice, OrderDate, PaymentMethod, estado, Notes } = req.body;
+  const { CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado } = req.body;
+  
+  console.log('📝 Datos recibidos:', { CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado });
   
   if (!CustomerID || !Invoice) {
     const error = new Error('CustomerID e Invoice son campos requeridos.');
@@ -33,11 +37,15 @@ exports.createOrder = async (req, res, next) => {
   }
   
   try {
-    const sql = 'INSERT INTO orders (CustomerID, Invoice, OrderDate, PaymentMethod, estado, Notes) VALUES (?, ?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO orders (CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado) VALUES (?, ?, ?, ?, ?, ?)';
     const estadoValue = estado || 'Pendiente';
-    const [result] = await pool.execute(sql, [CustomerID, Invoice, OrderDate, PaymentMethod, estadoValue, Notes]);
+    console.log('🔍 Valores a insertar:', [CustomerID, Product, Invoice, OrderDate, PaymentMethod, estadoValue]);
+    const [result] = await pool.execute(sql, [CustomerID, Product, Invoice, OrderDate, PaymentMethod, estadoValue]);
+    console.log('✅ Orden creada con ID:', result.insertId);
     res.status(201).json({ message: 'Orden creada exitosamente.', orderId: result.insertId });
   } catch (error) {
+    console.error('❌ Error al insertar orden:', error.message);
+    console.error('📋 Detalles del error:', error);
     next(error);
   }
 };
