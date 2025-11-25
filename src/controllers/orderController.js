@@ -24,15 +24,18 @@ exports.getAllOrders = async (req, res, next) => {
 
 // POST /api/orders - Crear una nueva orden
 exports.createOrder = async (req, res, next) => {
-  const { CustomerID, Invoice } = req.body;
-  if (!CustomerID) {
-    const error = new Error('CustomerID es un campo requerido.');
+  const { CustomerID, Invoice, OrderDate, PaymentMethod, estado, Notes } = req.body;
+  
+  if (!CustomerID || !Invoice) {
+    const error = new Error('CustomerID e Invoice son campos requeridos.');
     error.statusCode = 400;
     return next(error);
   }
+  
   try {
-    const sql = 'INSERT INTO orders (CustomerID, Invoice) VALUES (?, ?)';
-    const [result] = await pool.execute(sql, [CustomerID, Invoice]);
+    const sql = 'INSERT INTO orders (CustomerID, Invoice, OrderDate, PaymentMethod, estado, Notes) VALUES (?, ?, ?, ?, ?, ?)';
+    const estadoValue = estado || 'Pendiente';
+    const [result] = await pool.execute(sql, [CustomerID, Invoice, OrderDate, PaymentMethod, estadoValue, Notes]);
     res.status(201).json({ message: 'Orden creada exitosamente.', orderId: result.insertId });
   } catch (error) {
     next(error);

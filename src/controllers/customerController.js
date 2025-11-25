@@ -6,7 +6,7 @@ exports.createCustomer = async (req, res, next) => {
     console.log('\n--- [DEBUG] Iniciando createCustomer ---');
     console.log('[DEBUG] Contenido de req.body:', req.body);
 
-  const { CustomerName, PhoneNumber, Email, Address, CountryCode, City, State, PostalCode, estado } = req.body;
+  const { CustomerName, PhoneNumber, Email, Address, CountryCode, State, PostalCode, CountryName, estado } = req.body;
 
     console.log(`[DEBUG] Valor de CustomerName: ${CustomerName}`);
     console.log(`[DEBUG] Valor de Email: ${Email}`);
@@ -19,9 +19,11 @@ exports.createCustomer = async (req, res, next) => {
   }
 
   try {
-    const sql = 'INSERT INTO customers (CustomerName, PhoneNumber, Email, Address, CountryCode, City, State, PostalCode, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO customers (CustomerName, PhoneNumber, Email, Address, CountryCode, State, PostalCode, CountryName, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const estadoValue = estado !== undefined ? estado : 1; // Por defecto activo
-    const [result] = await pool.execute(sql, [CustomerName, PhoneNumber, Email, Address, CountryCode, City, State, PostalCode, estadoValue]);
+    const countryCodeValue = CountryCode || '52';
+    const countryNameValue = CountryName || 'México';
+    const [result] = await pool.execute(sql, [CustomerName, PhoneNumber, Email, Address, countryCodeValue, State, PostalCode, countryNameValue, estadoValue]);
     res.status(201).json({ message: 'Cliente creado exitosamente.', customerId: result.insertId });
   } catch (error) {
     next(error);
@@ -31,9 +33,27 @@ exports.createCustomer = async (req, res, next) => {
 // GET /api/customers - Obtener todos los clientes activos
 exports.getAllCustomers = async (req, res, next) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM customers WHERE estado = 1');
+    const sql = `
+      SELECT 
+        CustomerID,
+        CustomerName,
+        PhoneNumber,
+        Email,
+        Address,
+        CountryCode,
+        CountryName,
+        State,
+        PostalCode,
+        estado
+      FROM customers 
+      WHERE estado = 1
+      ORDER BY CustomerID DESC
+    `;
+    const [rows] = await pool.execute(sql);
+    console.log('Clientes obtenidos:', rows.length);
     res.status(200).json(rows);
   } catch (error) {
+    console.error('Error en getAllCustomers:', error);
     next(error);
   }
 };
