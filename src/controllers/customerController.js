@@ -73,6 +73,33 @@ exports.getCustomerOrders = async (req, res, next) => {
   }
 };
 
+// PUT /api/customers/:id - Actualizar un cliente
+exports.updateCustomer = async (req, res, next) => {
+  const { id } = req.params;
+  const { CustomerName, PhoneNumber, Email, Address, CountryCode, State, PostalCode, CountryName } = req.body;
+  
+  try {
+    const sql = `
+      UPDATE customers 
+      SET CustomerName = ?, PhoneNumber = ?, Email = ?, Address = ?, 
+          CountryCode = ?, State = ?, PostalCode = ?, CountryName = ?
+      WHERE CustomerID = ?
+    `;
+    const [result] = await pool.execute(sql, [
+      CustomerName, PhoneNumber, Email, Address, 
+      CountryCode, State, PostalCode, CountryName, id
+    ]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado.' });
+    }
+    
+    res.status(200).json({ message: 'Cliente actualizado correctamente.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // PUT /api/customers/:id/deactivate - "Dar de baja" un cliente
 exports.deactivateCustomer = async (req, res, next) => {
   const { id } = req.params;

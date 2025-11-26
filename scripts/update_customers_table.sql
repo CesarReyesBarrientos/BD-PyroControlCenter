@@ -1,3 +1,0 @@
--- Script para actualizar la tabla customers con los campos faltantes
--- Ejecuta este script en tu base de datos
--- Nota: Los campos ya existen en tu tabla, este script es solo de respaldo
