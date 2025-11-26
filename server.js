@@ -3,8 +3,8 @@ require('dotenv').config();
 
 const app = require('./src/app');
 const { testConnection, getDatabaseInfo, pool } = require('./src/config/database');
-// Iniciar el servicio de monitoreo de inventario
 const inventoryMonitor = require('./src/services/inventoryMonitorService');
+
 const PORT = process.env.PORT || 3000;
 
 async function initializeDatabase() {

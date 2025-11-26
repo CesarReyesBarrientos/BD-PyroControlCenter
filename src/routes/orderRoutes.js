@@ -7,6 +7,7 @@ router.get('/', orderController.getAllOrders);
 router.post('/', orderController.createOrder);
 router.get('/:id', orderController.getOrderDetails);
 router.put('/:id/status', orderController.updateOrderStatus);
+router.delete('/:id', orderController.deactivateOrder);
 
 // Rutas anidadas para Lotes
 router.post('/:orderId/lotes', orderController.createLoteForOrder);
