@@ -140,13 +140,14 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
     try {
-        const [result] = await pool.query('DELETE FROM inventario WHERE id = ?', [req.params.id]);
+        // Soft delete: cambiar estado a 0 en lugar de eliminar el registro
+        const [result] = await pool.query('UPDATE inventario SET estado = 0 WHERE id = ?', [req.params.id]);
         
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Producto no encontrado' });
         }
 
-        res.json({ message: 'Producto eliminado correctamente' });
+        res.json({ message: 'Producto dado de baja correctamente' });
     } catch (error) {
         console.error('Error deleting product:', error);
         res.status(500).json({ message: 'Error interno del servidor' });

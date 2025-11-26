@@ -15,6 +15,7 @@ exports.getAllOrders = async (req, res, next) => {
         c.CustomerName
       FROM orders o
       JOIN customers c ON o.CustomerID = c.CustomerID
+      WHERE o.activo = 1
       ORDER BY o.OrderDate DESC
     `;
     const [orders] = await pool.execute(sql);
@@ -143,4 +144,19 @@ exports.getLoteById = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+};
+
+// DELETE /api/orders/:id - Dar de baja una orden (baja lógica)
+exports.deactivateOrder = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const sql = 'UPDATE orders SET activo = 0 WHERE OrderID = ?';
+    const [result] = await pool.execute(sql, [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    res.status(200).json({ message: 'Orden dada de baja correctamente.' });
+  } catch (error) {
+    next(error);
+  }
 };
