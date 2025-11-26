@@ -10,7 +10,7 @@ El sistema de notificaciones ya está implementado y configurado para revisar el
 
 ```env
 # SendGrid Configuration
-SENDGRID_API_KEY=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
+SENDGRID_API_KEY=TU_API_KEY_AQUI          # ⚠️ CAMBIAR: Obtenlo de SendGrid
 SENDER_EMAIL=tu_email@ejemplo.com          # ⚠️ CAMBIAR: Email verificado en SendGrid
 SENDER_NAME=PyroControl Center
 ALERT_RECIPIENTS=tu_email@ejemplo.com      # ⚠️ CAMBIAR: Email(s) que recibirán las alertas
