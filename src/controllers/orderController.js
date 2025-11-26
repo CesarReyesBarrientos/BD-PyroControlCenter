@@ -7,6 +7,7 @@ exports.getAllOrders = async (req, res, next) => {
     const sql = `
       SELECT 
         o.OrderID,
+        o.CustomerID,
         o.Product,
         o.Invoice,
         o.OrderDate,
@@ -97,6 +98,32 @@ exports.updateOrderStatus = async (req, res, next) => {
     }
     res.status(200).json({ message: `Estado de la orden actualizado a "${estado}".` });
   } catch (error) {
+    next(error);
+  }
+};
+
+// PUT /api/orders/:id - Actualizar una orden completa
+exports.updateOrder = async (req, res, next) => {
+  const { id } = req.params;
+  const { CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado } = req.body;
+  
+  if (!CustomerID || !Invoice) {
+    const error = new Error('CustomerID e Invoice son campos requeridos.');
+    error.statusCode = 400;
+    return next(error);
+  }
+  
+  try {
+    const sql = 'UPDATE orders SET CustomerID = ?, Product = ?, Invoice = ?, OrderDate = ?, PaymentMethod = ?, estado = ? WHERE OrderID = ?';
+    const [result] = await pool.execute(sql, [CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado, id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Orden no encontrada.' });
+    }
+    
+    res.status(200).json({ message: 'Orden actualizada exitosamente.' });
+  } catch (error) {
+    console.error('❌ Error al actualizar orden:', error);
     next(error);
   }
 };
