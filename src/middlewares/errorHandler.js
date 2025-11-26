@@ -8,6 +8,7 @@ const errorHandler = (err, req, res, next) => {
   const response = {
     status: 'error',
     message: isDevOrTest ? err.message : 'An internal server error occurred',
+    details: err.details || undefined
   };
 
   res.status(statusCode).json(response);
