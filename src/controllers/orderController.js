@@ -26,9 +26,29 @@ exports.getAllOrders = async (req, res, next) => {
   }
 };
 
+// GET /api/orders/validate-invoice/:invoice - Validar si una factura ya existe
+exports.validateInvoice = async (req, res, next) => {
+  try {
+    const { invoice } = req.params;
+    const normalizedInvoice = invoice.toUpperCase().trim();
+    
+    const [existing] = await pool.execute(
+      'SELECT OrderID FROM orders WHERE Invoice = ? AND activo = 1',
+      [normalizedInvoice]
+    );
+    
+    res.status(200).json({
+      exists: existing.length > 0,
+      invoice: normalizedInvoice
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/orders - Crear una nueva orden
 exports.createOrder = async (req, res, next) => {
-  const { CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado } = req.body;
+  let { CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado } = req.body;
   
   console.log('📝 Datos recibidos:', { CustomerID, Product, Invoice, OrderDate, PaymentMethod, estado });
   
@@ -38,12 +58,37 @@ exports.createOrder = async (req, res, next) => {
     });
   }
   
+  // Normalizar factura: convertir a mayúsculas y eliminar espacios
+  Invoice = Invoice.toUpperCase().trim();
+  
+  // Validar formato de factura (XXX-YYYY-NNNN)
+  const invoicePattern = /^[A-Z]{3}-\d{4}-\d{4,6}$/;
+  if (!invoicePattern.test(Invoice)) {
+    return res.status(400).json({ 
+      message: 'Formato de factura inválido. Use: XXX-YYYY-NNNN (ejemplo: FAC-2024-0001)' 
+    });
+  }
+  
   // Iniciar transacción
   let connection;
   
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
+    
+    // Verificar que la factura no esté duplicada
+    const [existingInvoice] = await connection.execute(
+      'SELECT OrderID FROM orders WHERE Invoice = ? AND activo = 1',
+      [Invoice]
+    );
+    
+    if (existingInvoice.length > 0) {
+      await connection.rollback();
+      connection.release();
+      return res.status(400).json({ 
+        message: `El número de factura "${Invoice}" ya existe. Use un número diferente.` 
+      });
+    }
     
     // 1. Verificar si el producto tiene materiales asociados
     if (Product) {
