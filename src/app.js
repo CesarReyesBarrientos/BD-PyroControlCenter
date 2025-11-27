@@ -19,10 +19,28 @@ app.use(cors({
   credentials: true // Importante si en el futuro manejas cookies o headers de auth
 }));
 
-// 2. Luego Helmet, pero desactiva la política que bloquea recursos cruzados
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        // Permite conexiones a tu propio backend, a Auth0 y a localhost (para desarrollo)
+        connectSrc: [
+          "'self'", 
+          "https://bd-pyrocontrolcenter.onrender.com",
+          "https://dev-1kquk0aiaxxh1wly.us.auth0.com", 
+          "http://localhost:4200",
+          "ws://localhost:4200" // Para el hot-reload de Angular
+        ],
+        // Permite scripts de Auth0 si los necesitas
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.auth0.com"], 
+        // Permite imágenes de Auth0 (avatares)
+        imgSrc: ["'self'", "data:", "https://*.gravatar.com", "https://*.wp.com"] 
+      },
+    },
+    crossOriginResourcePolicy: false, // Mantén esto como te dije antes
+  })
+);
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
