@@ -12,7 +12,6 @@ const notFoundHandler = require('./middlewares/notFoundHandler');
 const app = express();
 
 app.use(helmet());
-const cors = require('cors');
 app.use(cors({
   origin: [
     'http://localhost:4200', 
