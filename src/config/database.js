@@ -12,6 +12,9 @@ const dbConfig = {
   connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT, 10) || 10,
   queueLimit: 0,
   connectTimeout: 10000,
+  ssl: {
+    rejectUnauthorized: false 
+  }
 };
 
 // Create and export the connection pool
@@ -24,12 +27,13 @@ async function testConnection() {
     console.log('🔗 Attempting to connect to the database...');
     console.log(`   Host: ${dbConfig.host}:${dbConfig.port}`);
     console.log(`   Database: ${dbConfig.database}`);
+    console.log(`   SSL: Enabled`); // Confirmación visual
     
     connection = await pool.getConnection();
     const [versionResult] = await connection.execute('SELECT VERSION() AS version');
     
     console.log('✅ Database connection successful!');
-    console.log(`   MySQL Version: ${versionResult[0].version}`);
+    console.log(`   MySQL/MariaDB Version: ${versionResult[0].version}`);
     return true;
   } catch (error) {
     console.error('❌ Error connecting to the database:');
@@ -69,5 +73,5 @@ module.exports = {
   pool,
   testConnection,
   getDatabaseInfo,
-  dbConfig, // Exported for display purposes, but not used for connection
+  dbConfig, 
 };
