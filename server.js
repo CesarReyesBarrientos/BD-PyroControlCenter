@@ -41,6 +41,13 @@ async function startServer() {
   // BEST PRACTICE: Implement graceful shutdown
   const gracefulShutdown = (signal) => {
     console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+    
+    // Detener el servicio de monitoreo de inventario
+    if (inventoryMonitor && inventoryMonitor.stop) {
+      inventoryMonitor.stop();
+      console.log('✅ Inventory monitor stopped.');
+    }
+    
     server.close(() => {
       console.log('✅ HTTP server closed.');
       pool.end(err => {
