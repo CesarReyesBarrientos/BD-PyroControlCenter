@@ -12,7 +12,13 @@ const notFoundHandler = require('./middlewares/notFoundHandler');
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+const cors = require('cors');
+app.use(cors({
+  origin: [
+    'http://localhost:4200', 
+    'https://cesarreyesbarrientos.github.io'
+  ]
+}));
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
