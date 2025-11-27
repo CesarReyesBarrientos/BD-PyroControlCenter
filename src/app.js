@@ -11,12 +11,17 @@ const notFoundHandler = require('./middlewares/notFoundHandler');
 
 const app = express();
 
-app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:4200', 
     'https://cesarreyesbarrientos.github.io'
-  ]
+  ],
+  credentials: true // Importante si en el futuro manejas cookies o headers de auth
+}));
+
+// 2. Luego Helmet, pero desactiva la política que bloquea recursos cruzados
+app.use(helmet({
+  crossOriginResourcePolicy: false,
 }));
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json());
