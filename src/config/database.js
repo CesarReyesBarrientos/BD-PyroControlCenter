@@ -2,6 +2,9 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+// Detectamos si estamos en el entorno de pruebas
+const isTestEnvironment = process.env.NODE_ENV === 'test';
+
 const dbConfig = {
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -12,7 +15,10 @@ const dbConfig = {
   connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT, 10) || 10,
   queueLimit: 0,
   connectTimeout: 10000,
-  ssl: {
+  // --- CAMBIO IMPORTANTE ---
+  // Si estamos en 'test', forzamos ssl: false.
+  // Si NO estamos en test, usamos tu configuración original (útil para producción/nube)
+  ssl: isTestEnvironment ? false : {
     rejectUnauthorized: false 
   }
 };
@@ -27,7 +33,8 @@ async function testConnection() {
     console.log('🔗 Attempting to connect to the database...');
     console.log(`   Host: ${dbConfig.host}:${dbConfig.port}`);
     console.log(`   Database: ${dbConfig.database}`);
-    console.log(`   SSL: Enabled`); // Confirmación visual
+    // Actualizamos el log para reflejar la realidad
+    console.log(`   SSL: ${isTestEnvironment ? 'Disabled (Test Mode)' : 'Enabled'}`); 
     
     connection = await pool.getConnection();
     const [versionResult] = await connection.execute('SELECT VERSION() AS version');
