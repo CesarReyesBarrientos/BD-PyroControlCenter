@@ -5,6 +5,7 @@ const pdfController = require('../controllers/pdfController');
 const router = express.Router();
 
 router.get('/', orderController.getAllOrders);
+router.get('/validate-invoice/:invoice', orderController.validateInvoice);
 router.post('/', orderController.createOrder);
 router.get('/:id', orderController.getOrderDetails);
 router.get('/:id/pdf', pdfController.generateOrderPDF);
